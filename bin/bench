@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby --yjit
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "benchmark/ips"
+require "shy/methodological_hash"
+require "hashie/mash"
+
+hash = {
+  "nome": "azienda",
+  "indirizzo": {
+    "via": "Via Roma",
+    "città": "Milano",
+    "provincia": "MI",
+    "cap": "20100"
+  },
+  "contatti": {
+    "telefono": "02 1234567",
+    "fax": "02 1234568",
+    "email": "info@azienda.it",
+    "sito_web": "https://www.azienda.it"
+  },
+  "dipartimenti": [
+    {
+      "nome": "Amministrazione",
+      "responsabile": {
+        "nome": "Mario Rossi",
+        "cognome": "Rossi",
+        "telefono": "02 1234567",
+        "email": "mario.rossi@azienda.it"
+      },
+      "dipendenti": [
+        {
+          "nome": "Luca Bianchi",
+          "cognome": "Bianchi",
+          "telefono": "02 1234567",
+          "email": "luca.bianchi@azienda.it"
+        },
+        {
+          "nome": "Giulia Verdi",
+          "cognome": "Verdi",
+          "telefono": "02 1234567",
+          "email": "giulia.verdi@azienda.it"
+        }
+      ]
+    },
+    {
+      "nome": "Marketing",
+      "responsabile": {
+        "nome": "Francesco Gialli",
+        "cognome": "Gialli",
+        "telefono": "02 1234567",
+        "email": "francesco.gialli@azienda.it"
+      },
+      "dipendenti": [
+        {
+          "nome": "Alessandro Rossi",
+          "cognome": "Rossi",
+          "telefono": "02 1234567",
+          "email": "alessandro.rossi@azienda.it"
+        },
+        {
+          "nome": "Chiara Neri",
+          "cognome": "Neri",
+          "telefono": "02 1234567",
+          "email": "chiara.neri@azienda.it"
+        }
+      ]
+    }
+  ],
+  "prodotti": [
+    {
+      "nome": "Prodotto A",
+      "descrizione": "Descrizione del prodotto A",
+      "prezzo": 10.99,
+      "categoria": "Elettronica"
+    },
+    {
+      "nome": "Prodotto B",
+      "descrizione": "Descrizione del prodotto B",
+      "prezzo": 5.99,
+      "categoria": "Abbigliamento"
+    },
+    {
+      "nome": "Prodotto C",
+      "descrizione": "Descrizione del prodotto C",
+      "prezzo": 7.99,
+      "categoria": "Casa e giardino"
+    }
+  ]
+}
+
+methodological = Shy::MethodologicalHash.new(hash)
+hashie_mash = Hashie::Mash.new(hash)
+
+Benchmark.ips do |x|
+  x.config(times: 1_000)
+  x.report("hash") { hash.fetch(:dipartimenti).each { _1.dig(:responsabile, :email) } }
+  x.report("methodological") { methodological.dipartimenti.each { _1.responsabile.email } }
+  x.report("hashie mash") { hashie_mash.dipartimenti.each { _1.responsabile.email } }
+  x.compare!
+end
