@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "methodological_hash/version"
+require "json"
 
 module Shy
   class MethodologicalHash # rubocop:disable Style/Documentation
     class Error < StandardError; end
 
     def initialize(hash, path = [])
-      @document = {}.merge!(hash)
+      @document = JSON.parse(JSON.dump(hash), symbolize_names: true)
       @path = path
       generate_methods!
     end
