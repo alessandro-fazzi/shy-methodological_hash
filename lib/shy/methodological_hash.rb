@@ -46,7 +46,16 @@ module Shy
     end
 
     def to_h
-      document.transform_values { _1.is_a?(Shy::MethodologicalHash) ? _1.to_h : _1 }
+      document.transform_values do |value|
+        case value
+        in Shy::MethodologicalHash
+          value.to_h
+        in Array if value.all? { _1.is_a?(Shy::MethodologicalHash) }
+          value.map(&:to_h)
+        else
+          value
+        end
+      end
     end
 
     def unwrap = to_h
@@ -60,7 +69,7 @@ module Shy
       document.each do |key, value|
         nested_path = path + Array(key)
 
-        document[key] = generate_nested(value, nested_path) if value.is_a?(Hash)
+        document[key] = handle_value(value:, nested_path:)
 
         unless respond_to?(key)
           define_singleton_method key do
@@ -69,9 +78,21 @@ module Shy
         end
 
         define_singleton_method :"#{key}=" do |new_value|
-          new_value = generate_nested(new_value, nested_path) if new_value.is_a?(Hash)
-          document[key] = new_value
+          document[key] = handle_value(value: new_value, nested_path:)
         end
+      end
+    end
+
+    def handle_value(value:, nested_path:)
+      case value
+      in Hash
+        generate_nested(value, nested_path)
+      in Array if value.all? { _1.is_a?(Hash) }
+        value.map do
+          generate_nested(_1, nested_path)
+        end
+      else
+        value
       end
     end
 

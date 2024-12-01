@@ -299,31 +299,38 @@ few code and being hot-replaceable by custom solution would you need it.
 ## How much slower it is?
 
 Also given nobody cared about performances, a lot slower! But the comparison
-is a bit apples vs. pineapples...
+is a bit apples vs. pineapples... and just to add some pears to the table I've
+added Hashie::Mash to the comparison. Mash does a LOT more than this gem, but
+this demonstrate that Mash could be overkill if you just need talk through
+messages to an hash.
 
 ```ruby
-hash = {a: {b: {c: {foo: 1}}}}
-mhash = Shy::MethodologicalHash.new(hash)
+# See bin/bench for the actual code
 
 Benchmark.ips do |x|
   x.config(times: 1_000)
-  x.report("hash") { hash.dig(:a, :b, :c, :foo) }
-  x.report("methodological") { mhash.a.b.c.foo }
+  x.report("hash") { hash.fetch(:dipartimenti).each { _1.dig(:responsabile, :email) } }
+  x.report("methodological") { methodological.dipartimenti.each { _1.responsabile.email } }
+  x.report("hashie mash") { hashie_mash.dipartimenti.each { _1.responsabile.email } }
   x.compare!
 end
 ```
 
 ```
+ruby 3.3.5 (2024-09-03 revision ef084cc8f4) +YJIT [arm64-darwin24]
 Warming up --------------------------------------
-                hash     1.369M i/100ms
-      methodological   540.313k i/100ms
+                hash   710.792k i/100ms
+      methodological   298.614k i/100ms
+         hashie mash    92.135k i/100ms
 Calculating -------------------------------------
-                hash     13.610M (± 0.8%) i/s   (73.47 ns/i) -     68.449M in   5.029549s
-      methodological      5.407M (± 0.6%) i/s  (184.94 ns/i) -     27.556M in   5.096342s
+                hash      7.509M (± 0.5%) i/s  (133.17 ns/i) -     37.672M in   5.017037s
+      methodological      3.269M (± 1.4%) i/s  (305.86 ns/i) -     16.424M in   5.024323s
+         hashie mash    925.379k (± 0.4%) i/s    (1.08 μs/i) -      4.699M in   5.077871s
 
 Comparison:
-                hash: 13610245.5 i/s
-      methodological:  5407205.5 i/s - 2.52x  slower
+                hash:  7509025.0 i/s
+      methodological:  3269485.2 i/s - 2.30x  slower
+         hashie mash:   925379.5 i/s - 8.11x  slower
 ```
 
 ## Development

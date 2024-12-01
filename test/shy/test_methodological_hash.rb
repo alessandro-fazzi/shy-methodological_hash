@@ -15,7 +15,11 @@ module Shy
           baz: {
             foo: "Foo"
           }
-        }
+        },
+        baz: [
+          { foo: 1 },
+          { foo: 2 }
+        ]
       }
     end
 
@@ -60,10 +64,18 @@ module Shy
         assert_kind_of Shy::MethodologicalHash, @subject.bar
         assert_kind_of Shy::MethodologicalHash, @subject.bar.bar
         assert_kind_of Shy::MethodologicalHash, @subject.bar.baz
+        @subject.baz.each do |member|
+          assert_kind_of Shy::MethodologicalHash, member
+        end
       end
 
       def test_methods_on_root_class_have_access_to_dynamically_generated_ones
         assert_equal 3, @subject.bar_bar_foo
+      end
+
+      def test_arrays_are_correctly_handled
+        assert_equal 1, @subject.baz[0].foo
+        assert_equal 2, @subject.baz[1].foo
       end
     end
 
@@ -87,6 +99,11 @@ module Shy
         def test_methods_on_root_class_have_access_to_dynamically_generated_ones
           assert_equal true, @subject.new_method
           assert_equal({ foo: 3 }, @subject.delegator)
+        end
+
+        def test_decoration_works_on_array_of_hashes
+          assert_equal 2, @subject.baz[0].double_foo
+          assert_equal 4, @subject.baz[1].double_foo
         end
       end
 
@@ -115,6 +132,12 @@ module Shy
 
             decorate_path [:bar, :sausage] do
               def it_works = "for sure"
+            end
+          end
+
+          decorate_path [:baz] do
+            def double_foo
+              foo * 2
             end
           end
         end
@@ -163,6 +186,12 @@ module Shy
           decorate_path %i[bar sausage], Sausage
         end
 
+        class Baz < ::Shy::MethodologicalHash
+          def double_foo
+            foo * 2
+          end
+        end
+
         class MyHash < ::Shy::MethodologicalHash
           def new_method
             true
@@ -173,6 +202,7 @@ module Shy
           end
 
           decorate_path [:bar], Bar
+          decorate_path [:baz], Baz
         end
 
         def setup

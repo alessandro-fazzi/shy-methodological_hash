@@ -12,3 +12,5 @@ gem "minitest", "~> 5.16"
 gem "rubocop", "~> 1.21"
 
 gem "benchmark-ips", "~> 2.14"
+
+gem "hashie", "~> 5.0"
