@@ -95,8 +95,27 @@ hashie_mash = Hashie::Mash.new(hash)
 
 Benchmark.ips do |x|
   x.config(times: 1_000)
-  x.report("hash") { hash.fetch(:dipartimenti).each { _1.dig(:responsabile, :email) } }
-  x.report("methodological") { methodological.dipartimenti.each { _1.responsabile.email } }
-  x.report("hashie mash") { hashie_mash.dipartimenti.each { _1.responsabile.email } }
+  x.report("hash read") { hash.fetch(:dipartimenti).each { _1.dig(:responsabile, :email) } }
+  x.report("methodological read") { methodological.dipartimenti.each { _1.responsabile.email } }
+  x.report("hashie mash read") { hashie_mash.dipartimenti.each { _1.responsabile.email } }
+
+  x.compare!
+end
+
+Benchmark.ips do |x|
+  x.config(times: 1_000)
+  x.report("hash write") do
+    hash[:nome] = "Alessandro"
+    hash[:indirizzo][:via] = "via Europa"
+  end
+  x.report("methodological write") do
+    methodological.nome = "Alessandro"
+    methodological.indirizzo.via = "Alessandro"
+  end
+  x.report("hashie mash write") do
+    hashie_mash.nome = "Alessandro"
+    hashie_mash.indirizzo.via = "Alessandro"
+  end
+
   x.compare!
 end

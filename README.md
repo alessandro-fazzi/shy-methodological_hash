@@ -298,39 +298,47 @@ few code and being hot-replaceable by custom solution would you need it.
 
 ## How much slower it is?
 
-Also given nobody cared about performances, a lot slower! But the comparison
-is a bit apples vs. pineapples... and just to add some pears to the table I've
+Actually it's slightly faster then a Hash in reading operations, but 10 times
+slower in writing operations.
+
+Just to add some confusion I've
 added Hashie::Mash to the comparison. Mash does a LOT more than this gem, but
 this demonstrate that Mash could be overkill if you just need talk through
 messages to an hash.
 
-```ruby
-# See bin/bench for the actual code
-
-Benchmark.ips do |x|
-  x.config(times: 1_000)
-  x.report("hash") { hash.fetch(:dipartimenti).each { _1.dig(:responsabile, :email) } }
-  x.report("methodological") { methodological.dipartimenti.each { _1.responsabile.email } }
-  x.report("hashie mash") { hashie_mash.dipartimenti.each { _1.responsabile.email } }
-  x.compare!
-end
-```
+> [!TIP]
+> See bin/bench for the code
 
 ```
 ruby 3.3.5 (2024-09-03 revision ef084cc8f4) +YJIT [arm64-darwin24]
 Warming up --------------------------------------
-                hash   710.792k i/100ms
-      methodological   298.614k i/100ms
-         hashie mash    92.135k i/100ms
+           hash read   707.670k i/100ms
+ methodological read   724.319k i/100ms
+    hashie mash read    90.458k i/100ms
 Calculating -------------------------------------
-                hash      7.509M (± 0.5%) i/s  (133.17 ns/i) -     37.672M in   5.017037s
-      methodological      3.269M (± 1.4%) i/s  (305.86 ns/i) -     16.424M in   5.024323s
-         hashie mash    925.379k (± 0.4%) i/s    (1.08 μs/i) -      4.699M in   5.077871s
+           hash read      7.468M (± 0.5%) i/s  (133.91 ns/i) -     37.507M in   5.022652s
+ methodological read      8.146M (± 0.3%) i/s  (122.76 ns/i) -     41.286M in   5.068251s
+    hashie mash read    914.278k (± 0.5%) i/s    (1.09 μs/i) -      4.613M in   5.046037s
 
 Comparison:
-                hash:  7509025.0 i/s
-      methodological:  3269485.2 i/s - 2.30x  slower
-         hashie mash:   925379.5 i/s - 8.11x  slower
+ methodological read:  8146107.3 i/s
+           hash read:  7467670.2 i/s - 1.09x  slower
+    hashie mash read:   914277.8 i/s - 8.91x  slower
+
+ruby 3.3.5 (2024-09-03 revision ef084cc8f4) +YJIT [arm64-darwin24]
+Warming up --------------------------------------
+          hash write     1.529M i/100ms
+methodological write   151.902k i/100ms
+   hashie mash write    46.589k i/100ms
+Calculating -------------------------------------
+          hash write     16.872M (± 0.1%) i/s   (59.27 ns/i) -     85.650M in   5.076585s
+methodological write      1.542M (± 0.5%) i/s  (648.36 ns/i) -      7.747M in   5.023005s
+   hashie mash write    469.129k (± 0.3%) i/s    (2.13 μs/i) -      2.376M in   5.064827s
+
+Comparison:
+          hash write: 16871691.0 i/s
+methodological write:  1542344.4 i/s - 10.94x  slower
+   hashie mash write:   469128.9 i/s - 35.96x  slower
 ```
 
 ## Development

@@ -65,22 +65,22 @@ module Shy
     attr_reader :document
     attr_accessor :path
 
-    def generate_methods! # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
+    def generate_methods!
       document.each do |key, value|
         nested_path = path + Array(key)
 
-        document[key] = handle_value(value:, nested_path:)
+        set(key:, value:, nested_path:)
 
-        unless respond_to?(key)
-          define_singleton_method key do
-            document[key]
-          end
-        end
+        self.class.attr_reader(key) unless respond_to?(key)
 
         define_singleton_method :"#{key}=" do |new_value|
-          document[key] = handle_value(value: new_value, nested_path:)
+          set(key:, value: new_value, nested_path:)
         end
       end
+    end
+
+    def set(key:, value:, nested_path:)
+      document[key] = instance_variable_set("@#{key}", handle_value(value:, nested_path:))
     end
 
     def handle_value(value:, nested_path:)
