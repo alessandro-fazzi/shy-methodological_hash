@@ -8,8 +8,8 @@ module Shy
     class Error < StandardError; end
 
     def initialize(hash, path = [])
-      @document = JSON.parse(JSON.dump(hash), symbolize_names: true)
-      @path = path
+      @__document = JSON.parse(JSON.dump(hash), symbolize_names: true)
+      @__path = path
       generate_methods!
     end
 
@@ -46,7 +46,7 @@ module Shy
     end
 
     def to_h
-      document.transform_values do |value|
+      __document.transform_values do |value|
         case value
         in Shy::MethodologicalHash
           value.to_h
@@ -62,12 +62,12 @@ module Shy
 
     private
 
-    attr_reader :document
-    attr_accessor :path
+    attr_reader :__document
+    attr_accessor :__path
 
     def generate_methods!
-      document.each do |key, value|
-        nested_path = path + Array(key)
+      __document.each do |key, value|
+        nested_path = __path + Array(key)
 
         set(key:, value:, nested_path:)
 
@@ -80,7 +80,7 @@ module Shy
     end
 
     def set(key:, value:, nested_path:)
-      document[key] = instance_variable_set("@#{key}", handle_value(value:, nested_path:))
+      __document[key] = instance_variable_set("@#{key}", handle_value(value:, nested_path:))
     end
 
     def handle_value(value:, nested_path:)
